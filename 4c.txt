@@ -1,0 +1,9 @@
+Certification authority (CA): binds public key to particular entity:
+Entity (person/website/router) provides “proof of identity” + public key to CA
+○ CA creates a certificate which binds identity to ’s public key
+○ Certificate containing ’s public key digitally signed by CA:
+CA says “this is ’s public key”
+
+
+Data is sent in records
+Record: length, Kc(data, HMAC )
