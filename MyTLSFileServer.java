@@ -106,9 +106,12 @@ public class MyTLSFileServer {
          System.out.println("Ready to recieve connections");
 
          // Loop forever, accepting connections from clients
-         SSLSocket s = (SSLSocket) ss.accept();
-         // Start a new thread to handle the connection
-         new Thread(new connectHandler(s)).start();
+         while (true) {
+            // Loop forever, accepting connections from clients
+            SSLSocket s = (SSLSocket) ss.accept();
+            // Start a new thread to handle the connection
+            new Thread(new connectHandler(s)).start();
+         }
 
       } catch (Exception e) {
          System.out.println("Exception: " + e.getMessage());
@@ -166,6 +169,8 @@ public class MyTLSFileServer {
                // Close the file BufferedReader
                fileIn.close();
                System.out.println("File sent successfully.");
+               writer.println("END"); // Indicate the end of the file
+               s.close(); // Close the connection
             } else {
                // If the file does not exist, notify the client
                writer.println("File not found");

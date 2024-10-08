@@ -38,7 +38,6 @@ public class MyTLSFileClient {
 
     } else {
       System.out.println("Usage: java MyTLSFileClient <host> <port> <filename>");
-      System.exit(0);
     }
 
     // create an SSLContext object
@@ -97,6 +96,8 @@ public class MyTLSFileClient {
         }
         fos.close();
         System.out.println("File received successfully.");
+
+        System.exit(0);
       } else {
         System.out.println("File not found.");
       }
