@@ -27,10 +27,13 @@ import java.io.*;
 
 public class MyTLSFileClient {
   public static void main(String args[]) {
+    // set the default host, port, and filename
     String host = "KB-MBP-M3.local";
     int port = 52002;
     String filename = "notes.md";
 
+    // check if the host, port, and filename are provided as command-line arguments,
+    // if so override the default values
     if (args.length == 3) {
       host = args[0];
       port = Integer.parseInt(args[1]);
@@ -83,21 +86,20 @@ public class MyTLSFileClient {
       String response = in.readLine();
       System.out.println("Response: " + response);
       if (response.equals("OK")) {
-        File file = new File("_" + filename);
-        PrintWriter fos = new PrintWriter(new FileWriter(file));
-        String line;
-        Boolean firstLine = true;
-        while ((line = in.readLine()) != null && !line.equals("END")) {
-          if (!firstLine) {
-            fos.write("\n"); // Add a newline before the new line if it's not the first line
-          }
-          fos.write(line); // Write the actual line content
-          firstLine = false;
-        }
-        fos.close();
-        System.out.println("File received successfully.");
+        File file = new File("_" + filename); // Create a file with the same name
+        try (FileOutputStream fos = new FileOutputStream(file)) { // Use FileOutputStream to write data
+          byte[] buffer = new byte[4096]; // Buffer for reading file data
+          int bytesRead;
+          socket.getInputStream();
 
-        System.exit(0);
+          // Read from the socket input stream and write to the file output stream
+          while ((bytesRead = socket.getInputStream().read(buffer)) != -1) {
+            fos.write(buffer, 0, bytesRead); // Write the bytes read to the file
+          }
+          System.out.println("File received successfully.");
+        } catch (IOException e) {
+          System.err.println("Error receiving file: " + e.getMessage());
+        }
       } else {
         System.out.println("File not found.");
       }
@@ -107,6 +109,12 @@ public class MyTLSFileClient {
     }
   }
 
+  /**
+   * Extract the Common Name from an X509Certificate
+   * 
+   * @param cert the X509Certificate to extract the Common Name from
+   * @return the Common Name
+   */
   static String getCommonName(X509Certificate cert) {
     String name = cert.getSubjectX500Principal().getName();
     String cn = null;

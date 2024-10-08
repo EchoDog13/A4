@@ -21,10 +21,6 @@
 // THE CODE BELOW IS INCOMPLETE AND HAS PROBLEMS
 // FOR EXAMPLE, IT IS MISSING THE NECESSARY EXCEPTION HANDLING
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.Buffer;
 import java.security.KeyStore;
 import javax.net.ServerSocketFactory;
@@ -34,6 +30,8 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 /**
  * 
@@ -154,23 +152,27 @@ public class MyTLSFileServer {
             if (file.exists()) {
                writer.println("OK"); // Indicate the file is found and will be sent
 
-               // Create a buffered stream for the file to be read into before sending
-               BufferedReader fileIn = new BufferedReader(new FileReader(file));
+               // Create an InputStream to read the file
+               try (InputStream fileInputStream = new FileInputStream(file);
+                     OutputStream socketOut = s.getOutputStream()) {
 
-               System.out.println("Sending file...");
-               String line;
+                  byte[] buffer = new byte[4096]; // Buffer for sending file data
+                  int bytesRead;
 
-               // Read the file line by line and send it to the client
-               System.out.println("Sending file...");
-               while ((line = fileIn.readLine()) != null) {
-                  writer.println(line);
-                  System.out.println(line);
+                  // Read the file and send it to the client
+                  while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+                     socketOut.write(buffer, 0, bytesRead);
+                  }
+                  socketOut.flush(); // Ensure all data is sent
+                  System.out.println("File sent successfully.");
+
+               } catch (IOException e) {
+                  System.out.println("Error sending file: " + e.getMessage());
                }
-               // Close the file BufferedReader
-               fileIn.close();
-               System.out.println("File sent successfully.");
-               writer.println("END"); // Indicate the end of the file
-               s.close(); // Close the connection
+
+               writer.println("END"); // Indicate the end of the file transfer
+               // Close the socket
+               s.close();
             } else {
                // If the file does not exist, notify the client
                writer.println("File not found");
