@@ -31,38 +31,47 @@ public class MyTLSFileClient {
     int port = 52002;
     String filename = "notes.md";
 
+    if (args.length == 3) {
+      host = args[0];
+      port = Integer.parseInt(args[1]);
+      filename = args[2];
+
+    } else {
+      System.out.println("Usage: java MyTLSFileClient <host> <port> <filename>");
+      System.exit(0);
+    }
+
     // create an SSLContext object
     try {
-      SSLContext context = createSSLContext();
-
+      // Create an SSLSocketFactory that uses the SSL/TLS protocol
       SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-      // factory = context.getSocketFactory();
 
       System.out.println("Client finished");
+      // create an SSLSocket object
       SSLSocket socket = (SSLSocket) factory.createSocket(host, port);
+
       // set HTTPS-style checking of HostName _before_
       // the handshake
-
       SSLParameters params = new SSLParameters();
       params.setEndpointIdentificationAlgorithm("HTTPS");
       socket.setSSLParameters(params);
+      // explicitly starting the TLS handshake
+      socket.startHandshake();
 
-      socket.startHandshake(); // explicitly starting the TLS handshake
-
-      // at this point, can use getInputStream and
-      // getOutputStream methods as you would in a regular Socket
+      // create a BufferedReader object for reading messages from the server
       BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+      // create a PrintWriter object for sending messages to the server
       PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
-      filename = "notes.md";
+      // filename = "notes.md";
+      // send the filename to the server
       out.println(filename);
 
       // get the X509Certificate for this session
       SSLSession session = socket.getSession();
       X509Certificate cert = (X509Certificate) session.getPeerCertificates()[0];
 
-      // extract the CommonName, and then compare
-
+      // extract the CommonName, and then compare it to the hostname
       String commonName;
       try {
         commonName = getCommonName(cert);
@@ -78,8 +87,13 @@ public class MyTLSFileClient {
         File file = new File("_" + filename);
         PrintWriter fos = new PrintWriter(new FileWriter(file));
         String line;
-        while ((line = in.readLine()) != null && !line.equals("END")) { // Check for end marker
-          fos.println(line);
+        Boolean firstLine = true;
+        while ((line = in.readLine()) != null && !line.equals("END")) {
+          if (!firstLine) {
+            fos.write("\n"); // Add a newline before the new line if it's not the first line
+          }
+          fos.write(line); // Write the actual line content
+          firstLine = false;
         }
         fos.close();
         System.out.println("File received successfully.");
@@ -90,21 +104,6 @@ public class MyTLSFileClient {
       // TODO: handle exception
       e.printStackTrace();
     }
-
-    //
-  }
-
-  private static SSLContext createSSLContext() {
-    SSLContext context = null;
-    try {
-      context = SSLContext.getInstance("TLS");
-      KeyStore ks = KeyStore.getInstance("JKS");
-      ks.load(new FileInputStream("ca-cert.jks"), "password".toCharArray());
-      context.init(null, null, null);
-    } catch (Exception e) {
-      System.out.println(e.getMessage());
-    }
-    return context;
   }
 
   static String getCommonName(X509Certificate cert) {

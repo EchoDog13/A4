@@ -35,9 +35,13 @@ import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import java.io.*;
 
+/**
+ * 
+ */
 public class MyTLSFileServer {
 
    private static SSLServerSocketFactory getSSF() {
+      // Create an SSLServerSocketFactory that uses the SSL/TLS protocol
       SSLServerSocketFactory ssf = null;
 
       try {
@@ -51,12 +55,10 @@ public class MyTLSFileServer {
          // Store the passphrase to unlock the JKS file.
          char[] passphrase = "passcode".toCharArray();
 
-         // Load the keystore file. The passphrase is an optional parameter to
-         // allow for integrity checking of the keystore. Could be null
+         // Load the keystore file and password
          ks.load(new FileInputStream("server.jks"), passphrase);
 
          // Init the KeyManagerFactory with a source of key material.
-         // The passphrase is necessary to unlock the private key contained.
          kmf.init(ks, passphrase);
 
          // Initialize the SSL context with the keys.
@@ -65,15 +67,31 @@ public class MyTLSFileServer {
          // Get the factory we will use to create our SSLServerSocket
          ssf = ctx.getServerSocketFactory();
 
+         // Return the factory
          return ssf;
       } catch (Exception ex) {
+         // If an exception occurs, print it out and return null
          System.out.println("Exception: " + ex.getMessage());
          return null;
       }
    }
 
+   /**
+    * Main method to start the server
+    * 
+    * @param args command line arguments of server port
+    * 
+    */
    public static void main(String args[]) {
-      final int serverPort = 52002;
+      int serverPort = 52002; // default port
+      if (args.length != 1) {
+         // If the user does not supply a port number, print usage and exit
+         System.out.println("Usage: java MyTLSFileServer <port>");
+         System.exit(1);
+
+      } else {
+         serverPort = Integer.parseInt(args[0]);
+      }
 
       try {
          // use the getSSF method to get a SSLServerSocketFactory and
@@ -82,61 +100,78 @@ public class MyTLSFileServer {
          SSLServerSocket ss = (SSLServerSocket) ssf.createServerSocket(serverPort);
          System.out.println("Server started on port " + serverPort);
 
+         // Enable only TLSv1.2 and TLSv1.3
          String EnabledProtocols[] = { "TLSv1.2", "TLSv1.3" };
          ss.setEnabledProtocols(EnabledProtocols);
          System.out.println("Ready to recieve connections");
 
+         // Loop forever, accepting connections from clients
          SSLSocket s = (SSLSocket) ss.accept();
-
+         // Start a new thread to handle the connection
          new Thread(new connectHandler(s)).start();
 
       } catch (Exception e) {
-         // TODO: handle exception
+         System.out.println("Exception: " + e.getMessage());
       }
    }
 
+   /**
+    * Inner class to handle the connection
+    */
    private static class connectHandler implements Runnable {
       private SSLSocket s;
 
+      /**
+       * Constructor
+       * 
+       * @param s the SSLSocket to handle
+       */
       public connectHandler(SSLSocket s) {
          this.s = s;
       }
 
+      // The run method to handle the connection
       @Override
       public void run() {
-
+         // Print out the IP address of the client
          System.out.println("Connection from " + s.getInetAddress());
 
+         // Try to read the file name from the client and send the file
          try {
+            // Create a BufferedReader and PrintWriter for the socket
             BufferedReader reader = new BufferedReader(new InputStreamReader(s.getInputStream()));
             PrintWriter writer = new PrintWriter(s.getOutputStream(), true);
+
             // Read the requested file name from the client
             String fileName = reader.readLine();
             System.out.println("Requested file: " + fileName);
-            System.out.println("heelo");
 
             // Open the file and prepare to send its content
             File file = new File(fileName);
             if (file.exists()) {
                writer.println("OK"); // Indicate the file is found and will be sent
 
-               // Create a buffered stream for the file
+               // Create a buffered stream for the file to be read into before sending
                BufferedReader fileIn = new BufferedReader(new FileReader(file));
 
                System.out.println("Sending file...");
                String line;
 
+               // Read the file line by line and send it to the client
                System.out.println("Sending file...");
                while ((line = fileIn.readLine()) != null) {
                   writer.println(line);
                   System.out.println(line);
                }
+               // Close the file BufferedReader
                fileIn.close();
                System.out.println("File sent successfully.");
             } else {
-               writer.println("File not found"); // Notify the client if the file does not exist
+               // If the file does not exist, notify the client
+               writer.println("File not found");
             }
          } catch (Exception e) {
+            // If an exception occurs, print it out
             e.printStackTrace();
          }
       }
