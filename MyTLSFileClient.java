@@ -29,14 +29,14 @@ public class MyTLSFileClient {
   public static void main(String args[]) {
     String host = "KB-MBP-M3.local";
     int port = 52002;
-    String filename = "4c.txt";
+    String filename = "notes.md";
 
     // create an SSLContext object
     try {
       SSLContext context = createSSLContext();
 
       SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-      factory = context.getSocketFactory();
+      // factory = context.getSocketFactory();
 
       System.out.println("Client finished");
       SSLSocket socket = (SSLSocket) factory.createSocket(host, port);
@@ -54,9 +54,8 @@ public class MyTLSFileClient {
       BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
       PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
-      filename = "4c.txt";
-      out.write(filename);
-      out.flush();
+      filename = "notes.md";
+      out.println(filename);
 
       // get the X509Certificate for this session
       SSLSession session = socket.getSession();
@@ -74,22 +73,18 @@ public class MyTLSFileClient {
 
       // recieve the file
       String response = in.readLine();
-      // System.out.println("Response: " + response);
-      // if (response.equals("OK")) {
-      // try (BufferedInputStream fileIn = new
-      // BufferedInputStream(socket.getInputStream());
-      // OutputStream fileOut = new FileOutputStream("received_" + filename)) {
-      // byte[] buffer = new byte[4096];
-      // int bytesRead;
-      // while ((bytesRead = fileIn.read(buffer)) != -1) {
-      // fileOut.write(buffer, 0, bytesRead);
-      // }
-      // fileOut.flush();
-      // }
-      // System.out.println("File received successfully.");
-      // } else {
-      // System.out.println("File not found.");
-      // }
+      System.out.println("Response: " + response);
+      if (response.equals("OK")) {
+        File file = new File("_" + filename);
+        PrintWriter fos = new PrintWriter(new FileWriter(file));
+        String line;
+        while ((line = in.readLine()) != null) {
+          fos.println(line);
+        }
+        System.out.println("File received successfully.");
+      } else {
+        System.out.println("File not found.");
+      }
     } catch (Exception e) {
       // TODO: handle exception
       e.printStackTrace();
@@ -103,7 +98,7 @@ public class MyTLSFileClient {
     try {
       context = SSLContext.getInstance("TLS");
       KeyStore ks = KeyStore.getInstance("JKS");
-      ks.load(new FileInputStream("ca-cert.jks"), "keyStore".toCharArray());
+      ks.load(new FileInputStream("ca-cert.jks"), "password".toCharArray());
       context.init(null, null, null);
     } catch (Exception e) {
       System.out.println(e.getMessage());

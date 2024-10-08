@@ -49,7 +49,7 @@ public class MyTLSFileServer {
          KeyStore ks = KeyStore.getInstance("JKS");
 
          // Store the passphrase to unlock the JKS file.
-         char[] passphrase = "serverKeyStore".toCharArray();
+         char[] passphrase = "passcode".toCharArray();
 
          // Load the keystore file. The passphrase is an optional parameter to
          // allow for integrity checking of the keystore. Could be null
@@ -88,9 +88,7 @@ public class MyTLSFileServer {
 
          SSLSocket s = (SSLSocket) ss.accept();
 
-         connectHandler ch = new connectHandler(s);
-         Thread t = new Thread(ch);
-         t.start();
+         new Thread(new connectHandler(s)).start();
 
       } catch (Exception e) {
          // TODO: handle exception
@@ -104,12 +102,16 @@ public class MyTLSFileServer {
          this.s = s;
       }
 
+      @Override
       public void run() {
 
          System.out.println("Connection from " + s.getInetAddress());
-         try (
-               BufferedReader reader = new BufferedReader(new InputStreamReader(s.getInputStream()));
-               PrintWriter writer = new PrintWriter(s.getOutputStream(), true)) {
+
+         try {
+            System.out.println("doaiwhjdowaihdnawodha");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(s.getInputStream()));
+            System.out.println("doaiwhjdowaihdnawodha");
+            PrintWriter writer = new PrintWriter(s.getOutputStream(), true);
             // Read the requested file name from the client
             String fileName = reader.readLine();
             System.out.println("Requested file: " + fileName);
@@ -117,26 +119,27 @@ public class MyTLSFileServer {
 
             // Open the file and prepare to send its content
             File file = new File(fileName);
-            if (file.exists() && file.isFile()) {
+            if (file.exists()) {
                writer.println("OK"); // Indicate the file is found and will be sent
 
                // Create a buffered stream for the file
-               try (BufferedInputStream fileIn = new BufferedInputStream(new FileInputStream(file));
-                     OutputStream out = s.getOutputStream()) {
+               BufferedReader fileIn = new BufferedReader(new FileReader(file));
 
-                  byte[] buffer = new byte[4096];
-                  int bytesRead;
-                  while ((bytesRead = fileIn.read(buffer)) != -1) {
-                     out.write(buffer, 0, bytesRead);
-                  }
-                  out.flush();
+               System.out.println("Sending file...");
+               String line;
+
+               System.out.println("Sending file...");
+               while ((line = fileIn.readLine()) != null) {
+                  writer.println(line);
+                  System.out.println(line);
                }
+               fileIn.close();
                System.out.println("File sent successfully.");
             } else {
                writer.println("File not found"); // Notify the client if the file does not exist
             }
-         } catch (IOException e) {
-            System.out.println("Exception during file transfer: " + e.getMessage());
+         } catch (Exception e) {
+            e.printStackTrace();
          }
       }
    }

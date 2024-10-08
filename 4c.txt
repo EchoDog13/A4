@@ -7,3 +7,10 @@ CA says “this is ’s public key”
 
 Data is sent in records
 Record: length, Kc(data, HMAC )
+
+
+
+keytool -import -trustcacerts -alias root -file ca-cert.pem \
+-keystore server.jks
+keytool -import -alias kb-mbp-m3.local \
+-file server-cert.pem -keystore server.jks
