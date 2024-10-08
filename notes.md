@@ -27,8 +27,11 @@ E: The CA's certificate fingerprint (SHA256) in server.jks:
 ## Step 4
 
 F: The exception from the first command:
+
 PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
+
 G: The exception from the second command:
+
 No name matching localhost found
 keytool -certreq -alias KB-MBP-M3 -file server.csr \-keystore server.jks
 

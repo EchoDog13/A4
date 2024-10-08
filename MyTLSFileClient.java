@@ -27,34 +27,26 @@ import java.io.*;
 
 public class MyTLSFileClient {
   public static void main(String args[]) {
-    String host = args[0];
-    int port = Integer.parseInt(args[1]);
-    String filename = args[2];
+    String host = "KB-MBP-M3.local";
+    int port = 52002;
+    String filename = "4c.txt";
 
     // create an SSLContext object
-
-    SSLContext context = createSSLContext();
     try {
+      SSLContext context = createSSLContext();
 
-      SSLSocketFactory factory = context.getSocketFactory();
+      SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+      factory = context.getSocketFactory();
+
+      System.out.println("Client finished");
       SSLSocket socket = (SSLSocket) factory.createSocket(host, port);
       // set HTTPS-style checking of HostName _before_
       // the handshake
 
-      try {
-
-      } catch (Exception e) {
-        // TODO: handle exception
-      }
       SSLParameters params = new SSLParameters();
       params.setEndpointIdentificationAlgorithm("HTTPS");
       socket.setSSLParameters(params);
 
-      try {
-
-      } catch (Exception e) {
-        // TODO: handle exception
-      }
       socket.startHandshake(); // explicitly starting the TLS handshake
 
       // at this point, can use getInputStream and
@@ -62,15 +54,15 @@ public class MyTLSFileClient {
       BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
       PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
-      // get the X509Certificate for this session
-      SSLSession session = socket.getSession();
-      X509Certificate cert = (X509Certificate) session.getPeerCertificates()[0];
-      filename = "4c";
+      filename = "4c.txt";
       out.write(filename);
       out.flush();
 
+      // get the X509Certificate for this session
+      SSLSession session = socket.getSession();
+      X509Certificate cert = (X509Certificate) session.getPeerCertificates()[0];
+
       // extract the CommonName, and then compare
-      // getCommonName(cert);
 
       String commonName;
       try {
@@ -82,25 +74,28 @@ public class MyTLSFileClient {
 
       // recieve the file
       String response = in.readLine();
-      System.out.println("Response: " + response);
-      if (response.equals("OK")) {
-        try (BufferedInputStream fileIn = new BufferedInputStream(socket.getInputStream());
-            OutputStream fileOut = new FileOutputStream("received_" + filename)) {
-          byte[] buffer = new byte[4096];
-          int bytesRead;
-          while ((bytesRead = fileIn.read(buffer)) != -1) {
-            fileOut.write(buffer, 0, bytesRead);
-          }
-          fileOut.flush();
-        }
-        System.out.println("File received successfully.");
-      } else {
-        System.out.println("File not found.");
-      }
+      // System.out.println("Response: " + response);
+      // if (response.equals("OK")) {
+      // try (BufferedInputStream fileIn = new
+      // BufferedInputStream(socket.getInputStream());
+      // OutputStream fileOut = new FileOutputStream("received_" + filename)) {
+      // byte[] buffer = new byte[4096];
+      // int bytesRead;
+      // while ((bytesRead = fileIn.read(buffer)) != -1) {
+      // fileOut.write(buffer, 0, bytesRead);
+      // }
+      // fileOut.flush();
+      // }
+      // System.out.println("File received successfully.");
+      // } else {
+      // System.out.println("File not found.");
+      // }
     } catch (Exception e) {
       // TODO: handle exception
-      System.out.println(e.getMessage());
+      e.printStackTrace();
     }
+
+    //
   }
 
   private static SSLContext createSSLContext() {
@@ -108,9 +103,8 @@ public class MyTLSFileClient {
     try {
       context = SSLContext.getInstance("TLS");
       KeyStore ks = KeyStore.getInstance("JKS");
-
-      // load the keystore
-
+      ks.load(new FileInputStream("ca-cert.jks"), "keyStore".toCharArray());
+      context.init(null, null, null);
     } catch (Exception e) {
       System.out.println(e.getMessage());
     }

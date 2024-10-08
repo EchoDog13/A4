@@ -70,7 +70,6 @@ public class MyTLSFileServer {
          System.out.println("Exception: " + ex.getMessage());
          return null;
       }
-
    }
 
    public static void main(String args[]) {
@@ -81,11 +80,13 @@ public class MyTLSFileServer {
          // create our SSLServerSocket, bound to specified port
          ServerSocketFactory ssf = getSSF();
          SSLServerSocket ss = (SSLServerSocket) ssf.createServerSocket(serverPort);
+         System.out.println("Server started on port " + serverPort);
+
          String EnabledProtocols[] = { "TLSv1.2", "TLSv1.3" };
          ss.setEnabledProtocols(EnabledProtocols);
+         System.out.println("Ready to recieve connections");
+
          SSLSocket s = (SSLSocket) ss.accept();
-         System.out.println("Server started on port " + serverPort);
-         // System.out.println("Connection from " + s.getInetAddress());
 
          connectHandler ch = new connectHandler(s);
          Thread t = new Thread(ch);
