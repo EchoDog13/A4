@@ -108,9 +108,7 @@ public class MyTLSFileServer {
          System.out.println("Connection from " + s.getInetAddress());
 
          try {
-            System.out.println("doaiwhjdowaihdnawodha");
             BufferedReader reader = new BufferedReader(new InputStreamReader(s.getInputStream()));
-            System.out.println("doaiwhjdowaihdnawodha");
             PrintWriter writer = new PrintWriter(s.getOutputStream(), true);
             // Read the requested file name from the client
             String fileName = reader.readLine();

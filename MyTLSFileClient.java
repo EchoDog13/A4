@@ -78,9 +78,10 @@ public class MyTLSFileClient {
         File file = new File("_" + filename);
         PrintWriter fos = new PrintWriter(new FileWriter(file));
         String line;
-        while ((line = in.readLine()) != null) {
+        while ((line = in.readLine()) != null && !line.equals("END")) { // Check for end marker
           fos.println(line);
         }
+        fos.close();
         System.out.println("File received successfully.");
       } else {
         System.out.println("File not found.");
